@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_meal_app/models/meal_model.dart';
+import 'package:flutter_meal_app/screens/meal_detail.dart';
+import 'package:flutter_meal_app/widgets/meal_item_trait.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 class MealItem extends StatelessWidget {
   const MealItem({super.key, required this.meal});
 
   final Meal meal;
+
+  void _mealSelected(BuildContext context, Meal meal) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => MealDetail(meal: meal),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +23,9 @@ class MealItem extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       elevation: 2,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          _mealSelected(context, meal);
+        },
         child: Stack(
           children: [
             FadeInImage(
@@ -45,8 +55,24 @@ class MealItem extends StatelessWidget {
                     const SizedBox(
                       height: 8,
                     ),
-                    const Row(
-                      children: [],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        MealItemTrait(
+                          title: '${meal.duration} mins',
+                          iconData: Icons.lock_clock_outlined,
+                        ),
+                        MealItemTrait(
+                          title:
+                              '${meal.complexity.name[0].toUpperCase()}${meal.complexity.name.substring(1).toLowerCase()}',
+                          iconData: Icons.lock_clock_outlined,
+                        ),
+                        MealItemTrait(
+                          title:
+                              '${meal.affordability.name[0].toUpperCase()}${meal.affordability.name.substring(1).toLowerCase()}',
+                          iconData: Icons.money_off,
+                        ),
+                      ],
                     )
                   ],
                 ),
