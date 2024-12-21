@@ -2,12 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_meal_app/models/meal_model.dart';
 import 'package:flutter_meal_app/widgets/meal_item.dart';
 
-class MealScreen extends StatelessWidget {
-  const MealScreen({super.key, this.title, required this.meals});
+class MealScreen extends StatefulWidget {
+  const MealScreen({
+    super.key,
+    this.title,
+    required this.meals,
+    required this.onToggleFavorites,
+  });
 
   final String? title;
   final List<Meal> meals;
+  final void Function(Meal meal) onToggleFavorites;
 
+  @override
+  _MealScreenState createState() => _MealScreenState();
+}
+
+class _MealScreenState extends State<MealScreen> {
   @override
   Widget build(BuildContext context) {
     Widget content = SafeArea(
@@ -37,22 +48,23 @@ class MealScreen extends StatelessWidget {
       ),
     );
 
-    if (meals.isNotEmpty) {
+    if (widget.meals.isNotEmpty) {
       content = ListView.builder(
-        itemCount: meals.length,
+        itemCount: widget.meals.length,
         itemBuilder: (context, index) => MealItem(
-          meal: meals[index],
+          meal: widget.meals[index],
+          onToggleFavorites: widget.onToggleFavorites,
         ),
       );
     }
 
-    if (title == null) {
+    if (widget.title == null) {
       return content;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title!),
+        title: Text(widget.title!),
       ),
       body: content,
     );
