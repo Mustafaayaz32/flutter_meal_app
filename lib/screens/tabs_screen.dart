@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_meal_app/data/meal_data.dart';
 import 'package:flutter_meal_app/models/meal_model.dart';
 import 'package:flutter_meal_app/screens/categories_screen.dart';
+import 'package:flutter_meal_app/screens/filter_screen.dart';
 import 'package:flutter_meal_app/screens/meal_screen.dart';
 import 'package:flutter_meal_app/widgets/main_drawer.dart';
 
@@ -11,10 +13,80 @@ class TabsScreen extends StatefulWidget {
   State<TabsScreen> createState() => _TabsScreenState();
 }
 
+const initialFilters = {
+  Filter.glutenFree: false,
+  Filter.lactoseFree: false,
+  Filter.vegetarian: false,
+  Filter.vegan: false,
+};
+
 class _TabsScreenState extends State<TabsScreen> {
   var _selectedIndex = 0;
-  var _activeTitle = 'Pick Category';
   final List<Meal> _favoriteMeals = [];
+  Map<Filter, bool> _selectedFilters = initialFilters;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final availableMeals = dummyMeals.where((meal) {
+      if (_selectedFilters[Filter.glutenFree]! && !meal.isGlutenFree) {
+        return false;
+      }
+      if (_selectedFilters[Filter.lactoseFree]! && !meal.isLactoseFree) {
+        return false;
+      }
+      if (_selectedFilters[Filter.vegetarian]! && !meal.isVegetarian) {
+        return false;
+      }
+      if (_selectedFilters[Filter.vegan]! && !meal.isVegan) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    Widget activePage = CategoriesScreen(
+      onToggleFavorites: _toggleFavorites,
+      availableMeals: availableMeals,
+    );
+
+    var activeTitle = 'Pick Category';
+
+    if (_selectedIndex == 1) {
+      activePage = MealScreen(
+        meals: _favoriteMeals,
+        onToggleFavorites: _toggleFavorites,
+      );
+      activeTitle = 'Your Favorites';
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(activeTitle)),
+      body: activePage,
+      drawer: MainDrawer(
+        selectDrawerItem: selectDrawerItem,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) {
+          _itemSelected(index);
+        },
+        currentIndex: _selectedIndex,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.set_meal),
+            label: 'Categories',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Favorites',
+          ),
+        ],
+      ),
+    );
+  }
 
   void _toggleFavorites(Meal meal) {
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
@@ -43,61 +115,25 @@ class _TabsScreenState extends State<TabsScreen> {
     });
   }
 
-  late Widget activeScreen;
-
-  @override
-  void initState() {
-    super.initState();
-    activeScreen = CategoriesScreen(
-      onToggleFavorites: _toggleFavorites,
-    );
-  }
-
   void _itemSelected(int index) {
     setState(() {
       _selectedIndex = index;
     });
-
-    if (_selectedIndex == 1) {
-      setState(() {
-        activeScreen = MealScreen(
-          meals: _favoriteMeals,
-          onToggleFavorites: _toggleFavorites,
-        );
-        _activeTitle = 'Favorite Meals';
-      });
-    } else {
-      setState(() {
-        activeScreen = CategoriesScreen(
-          onToggleFavorites: _toggleFavorites,
-        );
-        _activeTitle = 'Pick Category';
-      });
-    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_activeTitle)),
-      body: activeScreen,
-      drawer: const MainDrawer(),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          _itemSelected(index);
-        },
-        currentIndex: _selectedIndex,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.set_meal),
-            label: 'Categories',
+  void selectDrawerItem(String identifier) async {
+    Navigator.pop(context);
+    if (identifier == 'filters') {
+      final result = await Navigator.of(context).push<Map<Filter, bool>>(
+        MaterialPageRoute(
+          builder: (ctx) => FilterScreen(
+            currentFilters: _selectedFilters,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Favorites',
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+      setState(() {
+        _selectedFilters = result ?? initialFilters;
+      });
+    }
   }
 }
